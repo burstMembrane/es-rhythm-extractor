@@ -1,0 +1,53 @@
+[project]
+name = "essentia-rhythm-extractor"
+version = "0.1.0"
+description = "Thin python wrapper exposing Essentia RhythmExtractor2013 (multifeature)"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy==1.26.1",
+ "pybind11>=2.12",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.12", "numpy>=1.23"]
+build-backend = "scikit_build_core.build"
+
+[dependency-groups]
+dev = ["line-profiler>=5.0.0", "pytest>=8.4.2"]
+cli = ["soxr>=0.3.7", "soundfile>=0.12"]
+compare = [
+    "essentia==2.1b6.dev1177",
+]
+
+[project.optional-dependencies]
+cli = ["soxr>=0.3.7", "soundfile>=0.12"]
+
+[project.scripts]
+rhythm-extractor = "essentia_rhythm_extractor.cli:main"
+[tool.scikit-build]
+cmake.verbose = true
+# Include only the vendor files that are actually used by CMakeLists.txt
+sdist.include = [
+    "src/**/*",
+    "CMakeLists.txt",
+    "version.h.in",
+    "vendor/essentia/VERSION",
+    "vendor/essentia/src/essentia/*.cpp",
+    "vendor/essentia/src/essentia/*.h",
+    "vendor/essentia/src/essentia/streaming/*.cpp",
+    "vendor/essentia/src/essentia/streaming/*.h",
+    "vendor/essentia/src/essentia/streaming/algorithms/*.cpp",
+    "vendor/essentia/src/essentia/streaming/algorithms/*.h",
+    "vendor/essentia/src/essentia/scheduler/*.cpp",
+    "vendor/essentia/src/essentia/scheduler/*.h",
+    "vendor/essentia/src/algorithms/**/*.cpp",
+    "vendor/essentia/src/algorithms/**/*.h",
+    "vendor/essentia/src/3rdparty/kiss_fft130/**/*",
+    # Eigen headers that are needed for compilation
+    "vendor/essentia/packaging/debian_3rdparty/include/**/*",
+]
