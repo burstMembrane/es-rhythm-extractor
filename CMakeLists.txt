@@ -99,6 +99,11 @@ endif()
 # pybind11 via scikit-build-core
 find_package(pybind11 CONFIG REQUIRED)
 
+# Find Eigen3 - use system package on Linux, bundled otherwise
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  find_package(Eigen3 REQUIRED)
+endif()
+
 # Find numpy
 execute_process(
   COMMAND ${Python_EXECUTABLE} -c "import numpy; print(numpy.get_include())"
@@ -218,8 +223,10 @@ target_include_directories(essentia_rhythm_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/algorithms/stats
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/streaming
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/3rdparty/kiss_fft130
-  ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3
+  $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:/usr/include/eigen3>
+  $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:/usr/include/eigen3/unsupported>
+  $<$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>>:${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include>
+  $<$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>>:${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3>
 )
 
 # Performance and optimization macros
@@ -238,6 +245,11 @@ target_compile_options(essentia_rhythm_core PRIVATE
   "$<$<CONFIG:Release>:-ffunction-sections>"
   "$<$<CONFIG:Release>:-fdata-sections>"
 )
+
+# Link Eigen3 to the core library (only on Linux where we use system package)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  target_link_libraries(essentia_rhythm_core PUBLIC Eigen3::Eigen)
+endif()
 
 # Python extension
 pybind11_add_module(_rhythmext src/bridge.cpp)
@@ -262,4 +274,4 @@ target_include_directories(_rhythmext PRIVATE
 )
 
 # Install the Python module
-install(TARGETS _rhythmext DESTINATION .)
+install(TARGETS _rhythmext DESTINATION .)    
