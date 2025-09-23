@@ -6,7 +6,8 @@ cmake_policy(SET CMP0148 OLD)
 project(essentia_rhythm_multifeature LANGUAGES C CXX)
 
 # Setup Essentia dependency if not already present
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src" OR 
+   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3")
     message(STATUS "Setting up Essentia dependency...")
     execute_process(
         COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/scripts/setup-essentia.sh"
