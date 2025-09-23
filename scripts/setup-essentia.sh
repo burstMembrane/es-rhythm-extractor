@@ -46,37 +46,64 @@ if [ -d "$ESSENTIA_DIR/test/audio" ]; then
     rm -rf "$ESSENTIA_DIR/test/audio"
 fi
 
-# Build Eigen headers (required for compilation)
-echo "Building Eigen headers..."
-cd "$ESSENTIA_DIR/packaging/debian_3rdparty"
+# Check for system Eigen first, build only if needed
+echo "Checking for Eigen headers..."
 
-# Download and build Eigen manually to avoid the make install issue
-EIGEN_VERSION="3.3.7"
-PREFIX="$PWD"
+# Common system locations for Eigen
+EIGEN_FOUND=""
+for EIGEN_PATH in \
+    "/usr/include/eigen3" \
+    "/usr/local/include/eigen3" \
+    "/opt/homebrew/include/eigen3" \
+    "/usr/include/eigen3" \
+    "$ESSENTIA_DIR/packaging/debian_3rdparty/include/eigen3"; do
+    
+    if [ -f "$EIGEN_PATH/unsupported/Eigen/CXX11/Tensor" ]; then
+        echo "Found system Eigen at: $EIGEN_PATH"
+        EIGEN_FOUND="$EIGEN_PATH"
+        break
+    fi
+done
 
-echo "Installing headers for Eigen $EIGEN_VERSION"
-rm -rf tmp
-mkdir tmp
-cd tmp
-
-curl -SLO https://gitlab.com/libeigen/eigen/-/archive/$EIGEN_VERSION/eigen-$EIGEN_VERSION.tar.gz
-tar -xf eigen-$EIGEN_VERSION.tar.gz
-cd eigen-$EIGEN_VERSION
-
-mkdir build
-cd build
-
-# Configure and install Eigen
-cmake ../ -DCMAKE_INSTALL_PREFIX="$PREFIX"
-make install
-
-# Create pkgconfig file
-mkdir -p "$PREFIX"/lib/pkgconfig/
-cp "$PREFIX"/share/pkgconfig/eigen3.pc "$PREFIX"/lib/pkgconfig/ 2>/dev/null || echo "Pkgconfig copy failed, continuing..."
-
-cd ../../..
-rm -rf tmp
+# Only build Eigen if not found on system
+if [ -z "$EIGEN_FOUND" ]; then
+    echo "System Eigen not found, building Eigen 3.3.7..."
+    cd "$ESSENTIA_DIR/packaging/debian_3rdparty"
+    
+    EIGEN_VERSION="3.3.7"
+    PREFIX="$PWD"
+    
+    rm -rf tmp
+    mkdir tmp
+    cd tmp
+    
+    curl -SLO https://gitlab.com/libeigen/eigen/-/archive/$EIGEN_VERSION/eigen-$EIGEN_VERSION.tar.gz
+    tar -xf eigen-$EIGEN_VERSION.tar.gz
+    cd eigen-$EIGEN_VERSION
+    
+    mkdir build
+    cd build
+    
+    # Configure and install Eigen
+    cmake ../ -DCMAKE_INSTALL_PREFIX="$PREFIX"
+    make install
+    
+    # Create pkgconfig file
+    mkdir -p "$PREFIX"/lib/pkgconfig/
+    cp "$PREFIX"/share/pkgconfig/eigen3.pc "$PREFIX"/lib/pkgconfig/ 2>/dev/null || echo "Pkgconfig copy failed, continuing..."
+    
+    cd ../../..
+    rm -rf tmp
+    
+    echo "Eigen headers built in: $PREFIX/include/eigen3"
+else
+    echo "Using system Eigen at: $EIGEN_FOUND"
+fi
 
 echo "Essentia setup complete!"
 echo "Essentia source code is now available in: $ESSENTIA_DIR"
-echo "Eigen headers built in: $ESSENTIA_DIR/packaging/debian_3rdparty/include"
+if [ -n "$EIGEN_FOUND" ]; then
+    echo "Using system Eigen at: $EIGEN_FOUND"
+else
+    echo "Eigen headers built in: $ESSENTIA_DIR/packaging/debian_3rdparty/include"
+fi

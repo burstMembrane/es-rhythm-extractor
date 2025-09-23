@@ -1,13 +1,15 @@
-cmake_minimum_required(VERSION 3.20...3.30)
+cmake_minimum_required(VERSION 3.20)
 
 # Set modern CMake policies before project()
 cmake_policy(SET CMP0148 OLD)
 
 project(essentia_rhythm_multifeature LANGUAGES C CXX)
 
+# Check for system Eigen3 first
+find_package(Eigen3 3.3 QUIET)
+
 # Setup Essentia dependency if not already present
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src" OR 
-   NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src")
     message(STATUS "Setting up Essentia dependency...")
     execute_process(
         COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/scripts/setup-essentia.sh"
@@ -16,6 +18,40 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src" OR
     )
     if(NOT SETUP_RESULT EQUAL 0)
         message(FATAL_ERROR "Failed to setup Essentia dependency")
+    endif()
+    
+    # If system Eigen wasn't found, try to find the built one
+    if(NOT Eigen3_FOUND)
+        set(CMAKE_PREFIX_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty" ${CMAKE_PREFIX_PATH})
+        find_package(Eigen3 3.3 QUIET)
+    endif()
+endif()
+
+# Configure Eigen3 include paths
+if(Eigen3_FOUND)
+    message(STATUS "Found Eigen3: ${Eigen3_DIR}")
+    # Use the system Eigen3 target - find the actual include directory
+    if(TARGET Eigen3::Eigen)
+        get_target_property(EIGEN3_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+    else()
+        # Fallback to common system locations
+        foreach(EIGEN_PATH "/opt/homebrew/include/eigen3" "/usr/include/eigen3" "/usr/local/include/eigen3")
+            if(EXISTS "${EIGEN_PATH}/unsupported/Eigen/CXX11/Tensor")
+                set(EIGEN3_INCLUDE_DIR ${EIGEN_PATH})
+                break()
+            endif()
+        endforeach()
+    endif()
+    message(STATUS "Using system Eigen3: ${EIGEN3_INCLUDE_DIR}")
+else()
+    message(STATUS "Eigen3 not found via find_package, checking built version")
+    # Check for built Eigen in vendor directory
+    set(BUILT_EIGEN_PATH "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3")
+    if(EXISTS "${BUILT_EIGEN_PATH}/unsupported/Eigen/CXX11/Tensor")
+        message(STATUS "Using built Eigen3: ${BUILT_EIGEN_PATH}")
+        set(EIGEN3_INCLUDE_DIR ${BUILT_EIGEN_PATH})
+    else()
+        message(FATAL_ERROR "Could not find Eigen3 with CXX11/Tensor support")
     endif()
 endif()
 
@@ -114,10 +150,7 @@ endif()
 # pybind11 via scikit-build-core
 find_package(pybind11 CONFIG REQUIRED)
 
-# Find Eigen3 - use system package on Linux, bundled otherwise
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  find_package(Eigen3 REQUIRED)
-endif()
+# Eigen3 configuration is handled above - remove duplicate
 
 # Find numpy
 execute_process(
@@ -242,10 +275,9 @@ target_include_directories(essentia_rhythm_core PUBLIC
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/algorithms/stats
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/streaming
   ${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src/3rdparty/kiss_fft130
-  $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:/usr/include/eigen3>
-  $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:/usr/include/eigen3/unsupported>
-  $<$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>>:${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include>
-  $<$<NOT:$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>>:${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/packaging/debian_3rdparty/include/eigen3>
+  # Use the Eigen3 path we determined above
+  ${EIGEN3_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIR}/unsupported
 )
 
 # Performance and optimization macros
