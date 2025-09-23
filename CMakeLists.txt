@@ -1,8 +1,9 @@
-cmake_minimum_required(VERSION 3.20)
-project(essentia_rhythm_multifeature LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.20...3.30)
 
-# Set modern CMake policies
+# Set modern CMake policies before project()
 cmake_policy(SET CMP0148 OLD)
+
+project(essentia_rhythm_multifeature LANGUAGES C CXX)
 
 # Setup Essentia dependency if not already present
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src")

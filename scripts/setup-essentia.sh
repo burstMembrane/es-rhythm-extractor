@@ -49,7 +49,33 @@ fi
 # Build Eigen headers (required for compilation)
 echo "Building Eigen headers..."
 cd "$ESSENTIA_DIR/packaging/debian_3rdparty"
-./build_eigen3.sh
+
+# Download and build Eigen manually to avoid the make install issue
+EIGEN_VERSION="3.3.7"
+PREFIX="$PWD"
+
+echo "Installing headers for Eigen $EIGEN_VERSION"
+rm -rf tmp
+mkdir tmp
+cd tmp
+
+curl -SLO https://gitlab.com/libeigen/eigen/-/archive/$EIGEN_VERSION/eigen-$EIGEN_VERSION.tar.gz
+tar -xf eigen-$EIGEN_VERSION.tar.gz
+cd eigen-$EIGEN_VERSION
+
+mkdir build
+cd build
+
+# Configure and install Eigen
+cmake ../ -DCMAKE_INSTALL_PREFIX="$PREFIX"
+make install
+
+# Create pkgconfig file
+mkdir -p "$PREFIX"/lib/pkgconfig/
+cp "$PREFIX"/share/pkgconfig/eigen3.pc "$PREFIX"/lib/pkgconfig/ 2>/dev/null || echo "Pkgconfig copy failed, continuing..."
+
+cd ../../..
+rm -rf tmp
 
 echo "Essentia setup complete!"
 echo "Essentia source code is now available in: $ESSENTIA_DIR"
