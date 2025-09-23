@@ -31,23 +31,13 @@ cli = ["soxr>=0.3.7", "soundfile>=0.12"]
 rhythm-extractor = "essentia_rhythm_extractor.cli:main"
 [tool.scikit-build]
 cmake.verbose = true
+# Run setup script before build
+build-dir = "build"
 # Include only the vendor files that are actually used by CMakeLists.txt
 sdist.include = [
     "src/**/*",
     "CMakeLists.txt",
     "version.h.in",
-    "vendor/essentia/VERSION",
-    "vendor/essentia/src/essentia/*.cpp",
-    "vendor/essentia/src/essentia/*.h",
-    "vendor/essentia/src/essentia/streaming/*.cpp",
-    "vendor/essentia/src/essentia/streaming/*.h",
-    "vendor/essentia/src/essentia/streaming/algorithms/*.cpp",
-    "vendor/essentia/src/essentia/streaming/algorithms/*.h",
-    "vendor/essentia/src/essentia/scheduler/*.cpp",
-    "vendor/essentia/src/essentia/scheduler/*.h",
-    "vendor/essentia/src/algorithms/**/*.cpp",
-    "vendor/essentia/src/algorithms/**/*.h",
-    "vendor/essentia/src/3rdparty/kiss_fft130/**/*",
-    # Eigen headers that are needed for compilation
-    "vendor/essentia/packaging/debian_3rdparty/include/**/*",
+    "scripts/setup-essentia.sh",
+    # Note: vendor/essentia/* files are now downloaded during build by setup-essentia.sh
 ]

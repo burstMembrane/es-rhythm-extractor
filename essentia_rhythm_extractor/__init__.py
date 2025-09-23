@@ -1,5 +1,5 @@
 # Import the compiled extension
-from _rhythmext import rhythm_extractor_2013, rhythm_multifeature  # type: ignore
+from _rhythmext import rhythm_extractor_2013, rhythm_multifeature, onset_detection  # type: ignore
 
 """This module provides Python bindings for rhythm feature extraction
 using the Essentia library's BeatTrackerMultiFeature and RhythmExtractor2013 algorithms.
@@ -37,3 +37,18 @@ def run_rhythm_extractor_2013(
         dict: bpm, confidence, ticks, bpm_estimates, bpm_intervals
     """
     return rhythm_extractor_2013(x, float(sr), int(min_tempo), int(max_tempo), method)
+
+
+def run_onset_detection(x, sr):
+    """
+    Onset detection analysis using Essentia's OnsetRate algorithm.
+    
+    Args:
+        x: mono float32 numpy array
+        sr: sample rate (must be 44100.0)
+    Returns:
+        dict with keys: onset_rate, onsets
+            - onset_rate: number of onsets per second
+            - onsets: array of onset times in seconds
+    """
+    return onset_detection(x, float(sr))

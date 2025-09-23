@@ -62,6 +62,19 @@ py::dict rhythm_extractor_2013(py::array_t<float> x, double sample_rate,
     return d;
 }
 
+py::dict onset_detection(py::array_t<float> x, double sample_rate)
+{
+    check_input(x, sample_rate);
+    auto buf = x.request();
+    auto *data = static_cast<float *>(buf.ptr);
+    auto out = run_onset_detection(data, static_cast<size_t>(buf.size));
+
+    py::dict d;
+    d["onset_rate"] = out.onset_rate;
+    d["onsets"] = py::array(out.onsets_sec.size(), out.onsets_sec.data());
+    return d;
+}
+
 PYBIND11_MODULE(_rhythmext, m)
 {
     m.doc() = "Essentia RhythmExtractor2013 multifeature (skinny wheel)";
@@ -72,4 +85,6 @@ PYBIND11_MODULE(_rhythmext, m)
           py::arg("x"), py::arg("sample_rate"),
           py::arg("min_tempo") = 40, py::arg("max_tempo") = 208,
           py::arg("method") = "multifeature");
+    m.def("onset_detection", &onset_detection,
+          py::arg("x"), py::arg("sample_rate"));
 }

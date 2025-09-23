@@ -32,7 +32,7 @@ def main():
     parser.add_argument("audio_file", help="Path to audio file")
     parser.add_argument(
         "--algorithm",
-        choices=["multifeature", "rhythm2013"],
+        choices=["multifeature", "rhythm2013", "onset"],
         default="multifeature",
         help="Algorithm to use",
     )
@@ -54,6 +54,8 @@ def main():
             result = essentia_rhythm_extractor.run_multifeature(
                 audio, 44100, min_tempo=args.min_tempo, max_tempo=args.max_tempo
             )
+        elif args.algorithm == "onset":
+            result = essentia_rhythm_extractor.run_onset_detection(audio, 44100)
         else:
             result = essentia_rhythm_extractor.run_rhythm_extractor_2013(
                 audio, 44100, min_tempo=args.min_tempo, max_tempo=args.max_tempo

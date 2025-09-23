@@ -230,3 +230,53 @@ MFOut run_rhythm_extractor_2013(const float *mono_44100, size_t n_samples,
 
     return out;
 }
+
+OnsetOut run_onset_detection(const float *mono_44100, size_t n_samples)
+{
+    ensure_essentia_initialized();
+    OnsetOut out;
+
+    try {
+        // Use standard factory approach like in the original onset_detector.cpp
+        standard::AlgorithmFactory& factory = standard::AlgorithmFactory::instance();
+        
+        // Convert input to vector<Real>
+        vector<Real> signal(mono_44100, mono_44100 + n_samples);
+        
+        // Create OnsetRate algorithm
+        standard::Algorithm* onsetRate = factory.create("OnsetRate");
+        
+        // Configure the algorithm (important!)
+        onsetRate->configure();
+        
+        // Set up inputs and outputs
+        vector<Real> onsets;
+        Real onsetRateValue = 0.0;
+        
+        onsetRate->input("signal").set(signal);
+        onsetRate->output("onsets").set(onsets);
+        onsetRate->output("onsetRate").set(onsetRateValue);
+        
+        // Compute
+        onsetRate->compute();
+        
+        // Copy results to output structure
+        out.onset_rate = onsetRateValue;
+        out.onsets_sec = vector<double>(onsets.begin(), onsets.end());
+        
+        // Debug output
+        std::cerr << "Debug: signal size=" << signal.size() 
+                  << ", onsetRate=" << onsetRateValue 
+                  << ", onsets count=" << onsets.size() << std::endl;
+        
+        // Clean up
+        delete onsetRate;
+        
+    }
+    catch (const exception &e) {
+        // Return empty results on error - could log the error for debugging
+        std::cerr << "OnsetRate error: " << e.what() << std::endl;
+    }
+
+    return out;
+}
