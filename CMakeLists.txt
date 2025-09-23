@@ -4,6 +4,19 @@ project(essentia_rhythm_multifeature LANGUAGES C CXX)
 # Set modern CMake policies
 cmake_policy(SET CMP0148 OLD)
 
+# Setup Essentia dependency if not already present
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/essentia/src")
+    message(STATUS "Setting up Essentia dependency...")
+    execute_process(
+        COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/scripts/setup-essentia.sh"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        RESULT_VARIABLE SETUP_RESULT
+    )
+    if(NOT SETUP_RESULT EQUAL 0)
+        message(FATAL_ERROR "Failed to setup Essentia dependency")
+    endif()
+endif()
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -142,6 +155,10 @@ add_library(essentia_rhythm_core STATIC
   vendor/essentia/src/essentia/range.cpp
   vendor/essentia/src/essentia/stringutil.cpp
   vendor/essentia/src/essentia/connector.cpp
+
+  # onset rate
+  vendor/essentia/src/algorithms/rhythm/onsets.cpp
+  vendor/essentia/src/algorithms/rhythm/onsetrate.cpp
   # Essential streaming infrastructure  
   vendor/essentia/src/essentia/streaming/sourcebase.cpp
   vendor/essentia/src/essentia/streaming/sinkbase.cpp
