@@ -18,7 +18,11 @@ requires = ["scikit-build-core>=0.9", "pybind11>=2.12", "numpy>=1.23"]
 build-backend = "scikit_build_core.build"
 
 [dependency-groups]
-dev = ["line-profiler>=5.0.0", "pytest>=8.4.2"]
+dev = [
+    "line-profiler>=5.0.0",
+ "pyinstrument>=5.1.1",
+ "pytest>=8.4.2",
+]
 cli = ["soxr>=0.3.7", "soundfile>=0.12"]
 compare = [
     "essentia==2.1b6.dev1177",

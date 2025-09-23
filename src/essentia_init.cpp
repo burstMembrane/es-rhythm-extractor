@@ -14,6 +14,8 @@
 #include "algorithms/rhythm/beattrackermultifeature.h"
 #include "algorithms/rhythm/beattrackerdegara.h"
 #include "algorithms/rhythm/onsetdetection.h"
+#include "algorithms/rhythm/onsetrate.h"
+#include "algorithms/rhythm/onsets.h"
 #include "algorithms/rhythm/onsetdetectionglobal.h"
 #include "algorithms/rhythm/tempotapdegara.h"
 #include "algorithms/rhythm/tempotapmaxagreement.h"
@@ -50,6 +52,8 @@ namespace essentia
       AlgorithmFactory::Registrar<CartesianToPolar> regCartesianToPolar;
       AlgorithmFactory::Registrar<OnsetDetection> regOnsetDetection;
       AlgorithmFactory::Registrar<OnsetDetectionGlobal> regOnsetDetectionGlobal;
+      AlgorithmFactory::Registrar<OnsetRate> regOnsetRate;
+      AlgorithmFactory::Registrar<Onsets> regOnsets;
       AlgorithmFactory::Registrar<TempoTapDegara> regTempoTapDegara;
       AlgorithmFactory::Registrar<Scale> regScale;
       AlgorithmFactory::Registrar<NoiseAdder> regNoiseAdder;
