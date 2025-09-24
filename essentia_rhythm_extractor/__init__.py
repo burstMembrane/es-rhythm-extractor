@@ -96,3 +96,7 @@ def run_onset_detection_from_file(filename):
     """
     from _rhythmext import onset_detection_from_file  # type: ignore
     return onset_detection_from_file(filename)
+
+
+# High-level metronome generation function
+from .metronome import generate_metronome_from_file
