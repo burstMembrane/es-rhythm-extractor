@@ -1,6 +1,6 @@
 [project]
 name = "essentia-rhythm-extractor"
-version = "0.2.0"
+version = "0.2.1"
 description = "Thin python wrapper exposing Essentia RhythmExtractor2013 (multifeature)"
 readme = "README.md"
 requires-python = ">=3.12"
