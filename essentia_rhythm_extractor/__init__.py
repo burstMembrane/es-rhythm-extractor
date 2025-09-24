@@ -52,3 +52,47 @@ def run_onset_detection(x, sr):
             - onsets: array of onset times in seconds
     """
     return onset_detection(x, float(sr))
+
+
+# File-based functions for better performance (no Python audio loading)
+def run_multifeature_from_file(filename, *, min_tempo=40, max_tempo=208):
+    """
+    RhythmMultiFeature analysis from file using Essentia's MonoLoader.
+    Args:
+        filename: path to audio file
+        min_tempo: minimum tempo in BPM (default: 40)
+        max_tempo: maximum tempo in BPM (default: 208)
+    Returns:
+        dict with keys: bpm, confidence, ticks, bpm_estimates, bpm_intervals
+    """
+    from _rhythmext import rhythm_multifeature_from_file  # type: ignore
+    return rhythm_multifeature_from_file(filename, int(min_tempo), int(max_tempo))
+
+
+def run_rhythm_extractor_2013_from_file(filename, *, min_tempo=40, max_tempo=208, method="multifeature"):
+    """
+    RhythmExtractor2013 analysis from file using Essentia's MonoLoader.
+    Args:
+        filename: path to audio file
+        min_tempo: minimum tempo in BPM (default: 40)
+        max_tempo: maximum tempo in BPM (default: 208)
+        method: "multifeature" or "degara" (default: "multifeature")
+    Returns:
+        dict: bpm, confidence, ticks, bpm_estimates, bpm_intervals
+    """
+    from _rhythmext import rhythm_extractor_2013_from_file  # type: ignore
+    return rhythm_extractor_2013_from_file(filename, int(min_tempo), int(max_tempo), method)
+
+
+def run_onset_detection_from_file(filename):
+    """
+    Onset detection analysis from file using Essentia's MonoLoader.
+    Args:
+        filename: path to audio file
+    Returns:
+        dict with keys: onset_rate, onsets
+            - onset_rate: number of onsets per second
+            - onsets: array of onset times in seconds
+    """
+    from _rhythmext import onset_detection_from_file  # type: ignore
+    return onset_detection_from_file(filename)

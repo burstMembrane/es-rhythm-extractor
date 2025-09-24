@@ -8,23 +8,7 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
-import soundfile as sf
-import soxr
-
 import essentia_rhythm_extractor
-
-
-def load_audio(file_path):
-    """Load and preprocess audio to mono 44100Hz float32."""
-    audio, sr = sf.read(file_path, always_2d=False)
-    # Convert to mono if stereo
-    if audio.ndim > 1:
-        audio = np.mean(audio, axis=1)
-    # Resample to 44100Hz if needed
-    if sr != 44100:
-        audio = soxr.resample(audio, sr, 44100)
-    return np.ascontiguousarray(audio, dtype=np.float32)
 
 
 def main():
@@ -44,37 +28,36 @@ def main():
 
     args = parser.parse_args()
 
+    print(f"Using algorithm: {args.algorithm}", file=sys.stderr)
+
     if not Path(args.audio_file).exists():
         print(f"Error: File {args.audio_file} not found", file=sys.stderr)
         return 1
 
-    try:
-        audio = load_audio(args.audio_file)
-        if args.algorithm == "multifeature":
-            result = essentia_rhythm_extractor.run_multifeature(
-                audio, 44100, min_tempo=args.min_tempo, max_tempo=args.max_tempo
-            )
-        elif args.algorithm == "onset":
-            result = essentia_rhythm_extractor.run_onset_detection(audio, 44100)
-        else:
-            result = essentia_rhythm_extractor.run_rhythm_extractor_2013(
-                audio, 44100, min_tempo=args.min_tempo, max_tempo=args.max_tempo
-            )
+    # Use file-based functions to avoid Python audio loading overhead
+    if args.algorithm == "multifeature":
+        result = essentia_rhythm_extractor.run_multifeature_from_file(
+            args.audio_file, min_tempo=args.min_tempo, max_tempo=args.max_tempo
+        )
+    elif args.algorithm == "onset":
+        result = essentia_rhythm_extractor.run_onset_detection_from_file(
+            args.audio_file
+        )
+    else:
+        result = essentia_rhythm_extractor.run_rhythm_extractor_2013_from_file(
+            args.audio_file, min_tempo=args.min_tempo, max_tempo=args.max_tempo
+        )
 
-        # Convert numpy arrays to lists for JSON serialization
-        for key, value in result.items():
-            if isinstance(value, np.ndarray):
-                result[key] = value.tolist()
+    # Convert arrays to lists for JSON serialization
+    for key, value in result.items():
+        if hasattr(value, "tolist"):
+            result[key] = value.tolist()
 
-        if args.output:
-            with open(args.output, "w") as f:
-                json.dump(result, f, indent=2)
-        else:
-            print(json.dumps(result, indent=2))
-
-    except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
-        return 1
+    if args.output:
+        with open(args.output, "w") as f:
+            json.dump(result, f, indent=2)
+    else:
+        print(json.dumps(result, indent=2))
 
     return 0
 

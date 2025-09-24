@@ -38,3 +38,15 @@ MFOut run_rhythm_extractor_2013(const float *mono_44100, size_t n_samples,
  * Returns onset times and overall onset rate.
  */
 OnsetOut run_onset_detection(const float *mono_44100, size_t n_samples);
+
+/**
+ * File-based versions that use Essentia's MonoLoader internally
+ */
+MFOut run_multifeature_from_file(const std::string& filename,
+                                 int min_tempo_bpm, int max_tempo_bpm);
+
+MFOut run_rhythm_extractor_2013_from_file(const std::string& filename,
+                                          int min_tempo_bpm, int max_tempo_bpm,
+                                          const std::string& method = "multifeature");
+
+OnsetOut run_onset_detection_from_file(const std::string& filename);

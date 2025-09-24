@@ -150,6 +150,11 @@ endif()
 # pybind11 via scikit-build-core
 find_package(pybind11 CONFIG REQUIRED)
 
+# Find FFmpeg/libav libraries and libsamplerate
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(LIBAV REQUIRED libavformat libavcodec libavutil libswresample)
+pkg_check_modules(SAMPLERATE REQUIRED samplerate)
+
 # Eigen3 configuration is handled above - remove duplicate
 
 # Find numpy
@@ -250,6 +255,12 @@ vendor/essentia/src/algorithms/complex/magnitude.cpp
 vendor/essentia/src/algorithms/temporal/loudness.cpp
 vendor/essentia/src/algorithms/temporal/zerocrossingrate.cpp
 vendor/essentia/src/algorithms/stats/rms.cpp
+  # IO algorithms
+  vendor/essentia/src/algorithms/io/audioloader.cpp
+  vendor/essentia/src/algorithms/io/monoloader.cpp
+  # Standard algorithms needed by MonoLoader
+  vendor/essentia/src/algorithms/standard/monomixer.cpp
+  vendor/essentia/src/algorithms/standard/resample.cpp
   #
   # KissFFT (to avoid FFTW)
 vendor/essentia/src/3rdparty/kiss_fft130/kiss_fft.c
@@ -301,6 +312,11 @@ target_compile_options(essentia_rhythm_core PRIVATE
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   target_link_libraries(essentia_rhythm_core PUBLIC Eigen3::Eigen)
 endif()
+
+# Link FFmpeg/libav libraries and libsamplerate
+target_link_libraries(essentia_rhythm_core PUBLIC ${LIBAV_LIBRARIES} ${SAMPLERATE_LIBRARIES})
+target_include_directories(essentia_rhythm_core PUBLIC ${LIBAV_INCLUDE_DIRS} ${SAMPLERATE_INCLUDE_DIRS})
+target_compile_options(essentia_rhythm_core PUBLIC ${LIBAV_CFLAGS_OTHER} ${SAMPLERATE_CFLAGS_OTHER})
 
 # Python extension
 pybind11_add_module(_rhythmext src/bridge.cpp)

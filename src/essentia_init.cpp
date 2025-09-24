@@ -35,6 +35,14 @@
 #include "algorithms/complex/cartesiantopolar.h"
 #include "algorithms/complex/magnitude.h"
 
+// --- IO Algorithms ---
+#include "algorithms/io/audioloader.h"
+#include "algorithms/io/monoloader.h"
+
+// --- Standard Algorithms needed by MonoLoader ---
+#include "algorithms/standard/monomixer.h"
+#include "algorithms/standard/resample.h"
+
 // Algorithm registration functions following Essentia's pattern
 namespace essentia
 {
@@ -67,6 +75,10 @@ namespace essentia
       AlgorithmFactory::Registrar<Spectrum> regSpectrum;
       AlgorithmFactory::Registrar<Magnitude> regMagnitude;
       AlgorithmFactory::Registrar<ERBBands> regERBBands;
+      AlgorithmFactory::Registrar<AudioLoader> regAudioLoader;
+      AlgorithmFactory::Registrar<MonoLoader> regMonoLoader;
+      AlgorithmFactory::Registrar<MonoMixer> regMonoMixer;
+      AlgorithmFactory::Registrar<Resample> regResample;
     }
   }
   namespace streaming
@@ -83,6 +95,10 @@ namespace essentia
       AlgorithmFactory::Registrar<OnsetDetectionGlobal, essentia::standard::OnsetDetectionGlobal> regOnsetDetectionGlobal;
       AlgorithmFactory::Registrar<TempoTapDegara, essentia::standard::TempoTapDegara> regTempoTapDegara;
       AlgorithmFactory::Registrar<Scale, essentia::standard::Scale> regScale;
+      AlgorithmFactory::Registrar<AudioLoader, essentia::standard::AudioLoader> regAudioLoader;
+      AlgorithmFactory::Registrar<MonoLoader, essentia::standard::MonoLoader> regMonoLoader;
+      AlgorithmFactory::Registrar<MonoMixer, essentia::standard::MonoMixer> regMonoMixer;
+      AlgorithmFactory::Registrar<Resample, essentia::standard::Resample> regResample;
     }
   }
 }

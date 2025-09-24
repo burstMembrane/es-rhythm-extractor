@@ -280,3 +280,207 @@ OnsetOut run_onset_detection(const float *mono_44100, size_t n_samples)
 
     return out;
 }
+
+// File-based implementations using Essentia's MonoLoader
+MFOut run_multifeature_from_file(const std::string& filename,
+                                 int min_tempo_bpm, int max_tempo_bpm)
+{
+    ensure_essentia_initialized();
+    MFOut out;
+
+    try {
+        streaming::AlgorithmFactory& factory = streaming::AlgorithmFactory::instance();
+
+        Pool pool;
+
+        // Use MonoLoader instead of VectorInput
+        Algorithm* monoloader = factory.create("MonoLoader",
+                                               "filename", filename,
+                                               "sampleRate", 44100.0);
+        Algorithm* beattracker = factory.create("BeatTrackerMultiFeature");
+        beattracker->configure("minTempo", min_tempo_bpm, "maxTempo", max_tempo_bpm);
+
+        // Connect algorithms
+        monoloader->output("audio") >> beattracker->input("signal");
+        beattracker->output("ticks") >> PC(pool, "rhythm.ticks");
+        beattracker->output("confidence") >> PC(pool, "rhythm.confidence");
+
+        // Create and run network
+        Network network(monoloader);
+        network.run();
+
+        // Extract results from pool
+        vector<Real> ticks;
+        Real confidence = 0.0;
+
+        if (pool.contains<vector<Real>>("rhythm.ticks")) {
+            ticks = pool.value<vector<Real>>("rhythm.ticks");
+        }
+        if (pool.contains<Real>("rhythm.confidence")) {
+            confidence = pool.value<Real>("rhythm.confidence");
+        }
+
+        // Calculate BPM from ticks
+        Real bpm = 0.0;
+        vector<Real> bpmIntervals;
+        vector<Real> estimates;
+
+        if (ticks.size() > 1) {
+            bpmIntervals.reserve(ticks.size() - 1);
+            for (size_t i = 1; i < ticks.size(); i++) {
+                bpmIntervals.push_back(ticks[i] - ticks[i - 1]);
+                estimates.push_back(60.0 / bpmIntervals.back());
+            }
+
+            if (!estimates.empty()) {
+                Real sum = 0;
+                for (size_t i = 0; i < estimates.size(); i++) {
+                    sum += estimates[i];
+                }
+                bpm = sum / estimates.size();
+            }
+        }
+
+        // Copy results to output structure
+        out.bpm = bpm;
+        out.confidence = confidence;
+        out.ticks_sec = vector<double>(ticks.begin(), ticks.end());
+        out.bpm_estimates = vector<double>(estimates.begin(), estimates.end());
+        out.bpm_intervals_sec = vector<double>(bpmIntervals.begin(), bpmIntervals.end());
+
+    }
+    catch (const exception &e) {
+        // Return empty results on error
+    }
+
+    return out;
+}
+
+MFOut run_rhythm_extractor_2013_from_file(const std::string& filename,
+                                          int min_tempo_bpm, int max_tempo_bpm,
+                                          const std::string& method)
+{
+    ensure_essentia_initialized();
+    MFOut out;
+
+    try {
+        streaming::AlgorithmFactory& factory = streaming::AlgorithmFactory::instance();
+
+        Pool pool;
+
+        // Use MonoLoader
+        Algorithm* monoloader = factory.create("MonoLoader",
+                                               "filename", filename,
+                                               "sampleRate", 44100.0);
+        Algorithm* beattracker;
+
+        // Choose algorithm based on method
+        if (method == "degara") {
+            beattracker = factory.create("BeatTrackerDegara");
+        } else {
+            beattracker = factory.create("BeatTrackerMultiFeature");
+        }
+
+        beattracker->configure("minTempo", min_tempo_bpm, "maxTempo", max_tempo_bpm);
+
+        // Connect algorithms
+        monoloader->output("audio") >> beattracker->input("signal");
+        beattracker->output("ticks") >> PC(pool, "rhythm.ticks");
+
+        if (method != "degara") {
+            beattracker->output("confidence") >> PC(pool, "rhythm.confidence");
+        }
+
+        // Create and run network
+        Network network(monoloader);
+        network.run();
+
+        // Extract results from pool
+        vector<Real> ticks;
+        Real confidence = 0.0;
+
+        if (pool.contains<vector<Real>>("rhythm.ticks")) {
+            ticks = pool.value<vector<Real>>("rhythm.ticks");
+        }
+        if (pool.contains<Real>("rhythm.confidence")) {
+            confidence = pool.value<Real>("rhythm.confidence");
+        }
+
+        // Use sophisticated BPM calculation
+        Real bpm;
+        vector<Real> estimates;
+        vector<Real> bpmIntervals;
+        calculateBpmRhythmExtractor2013Style(ticks, bpm, estimates, bpmIntervals);
+
+        // Copy results to output structure
+        out.bpm = bpm;
+        out.confidence = confidence;
+        out.ticks_sec = vector<double>(ticks.begin(), ticks.end());
+        out.bpm_estimates = vector<double>(estimates.begin(), estimates.end());
+        out.bpm_intervals_sec = vector<double>(bpmIntervals.begin(), bpmIntervals.end());
+
+    }
+    catch (const exception &e) {
+        // Return empty results on error
+    }
+
+    return out;
+}
+
+OnsetOut run_onset_detection_from_file(const std::string& filename)
+{
+    ensure_essentia_initialized();
+    OnsetOut out;
+
+    try {
+        streaming::AlgorithmFactory& factory = streaming::AlgorithmFactory::instance();
+
+        Pool pool;
+
+        // Use MonoLoader
+        Algorithm* monoloader = factory.create("MonoLoader",
+                                               "filename", filename,
+                                               "sampleRate", 44100.0);
+
+        // For onset detection, we need to process the whole file at once
+        // So we'll collect audio first then process with standard algorithm
+        monoloader->output("audio") >> PC(pool, "audio");
+
+        // Create and run network to load audio
+        Network network(monoloader);
+        network.run();
+
+        // Get the loaded audio
+        if (!pool.contains<vector<Real>>("audio")) {
+            return out; // Empty result
+        }
+
+        vector<Real> signal = pool.value<vector<Real>>("audio");
+
+        // Now use standard OnsetRate algorithm
+        standard::AlgorithmFactory& stdFactory = standard::AlgorithmFactory::instance();
+        standard::Algorithm* onsetRate = stdFactory.create("OnsetRate");
+        onsetRate->configure();
+
+        vector<Real> onsets;
+        Real onsetRateValue = 0.0;
+
+        onsetRate->input("signal").set(signal);
+        onsetRate->output("onsets").set(onsets);
+        onsetRate->output("onsetRate").set(onsetRateValue);
+
+        onsetRate->compute();
+
+        // Copy results to output structure
+        out.onset_rate = onsetRateValue;
+        out.onsets_sec = vector<double>(onsets.begin(), onsets.end());
+
+        delete onsetRate;
+
+    }
+    catch (const exception &e) {
+        // Return empty results on error
+    }
+
+    return out;
+}
