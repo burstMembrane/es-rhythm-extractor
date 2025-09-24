@@ -80,6 +80,7 @@ def _generate_click_sound(sample_rate: int = 44100, duration: float = 0.05, freq
 
 def generate_metronome_from_file(
     input_file: str,
+    output_dir: str,
     output_file: Optional[str] = None,
     create_mixed: bool = True,
     save_json: bool = True
@@ -88,7 +89,8 @@ def generate_metronome_from_file(
 
     Args:
         input_file: Path to input audio file
-        output_file: Path to output metronome WAV file (defaults to input_file stem + '_metronome.wav')
+        output_dir: Directory to save output files (required)
+        output_file: Filename for metronome WAV file (defaults to input_file stem + '_metronome.wav')
         create_mixed: Whether to create a mixed version with original audio (default: True)
         save_json: Whether to save beat grid data to JSON (default: True)
 
@@ -113,9 +115,15 @@ def generate_metronome_from_file(
     if not input_path.exists():
         raise FileNotFoundError(f"Input file '{input_file}' not found")
 
+    # Create output directory if it doesn't exist
+    output_dir_path = Path(output_dir)
+    output_dir_path.mkdir(parents=True, exist_ok=True)
+
     # Set output file path
     if output_file is None:
-        output_file = str(input_path.with_name(f"{input_path.stem}_metronome.wav"))
+        output_file = f"{input_path.stem}_metronome.wav"
+
+    output_file_path = output_dir_path / output_file
 
     # Run rhythm analysis using from_file methods
     print("Detecting onsets...")
@@ -205,8 +213,8 @@ def generate_metronome_from_file(
         metronome = metronome / max_val * 0.8
 
     # Write metronome output
-    sf.write(output_file, metronome, sample_rate)
-    print(f"Metronome track written to: {output_file}")
+    sf.write(str(output_file_path), metronome, sample_rate)
+    print(f"Metronome track written to: {output_file_path}")
 
     result = {
         "bpm": bpm,
@@ -216,23 +224,25 @@ def generate_metronome_from_file(
         "quantized_onsets": quantized_onsets,
         "beats_intervals": beats_intervals,
         "bpm_intervals": bpm_intervals,
-        "metronome_file": output_file
+        "metronome_file": str(output_file_path)
     }
 
     # Create mixed version if requested
     if create_mixed:
-        mixed_file = output_file.replace(".wav", "_mixed.wav")
+        mixed_filename = output_file.replace(".wav", "_mixed.wav")
+        mixed_file_path = output_dir_path / mixed_filename
         mixed = audio * 0.3 + metronome * 0.7  # Mix original (quieter) with metronome
         max_val = np.abs(mixed).max()
         if max_val > 0:
             mixed = mixed / max_val * 0.8
-        sf.write(mixed_file, mixed, sample_rate)
-        print(f"Mixed track written to: {mixed_file}")
-        result["mixed_file"] = mixed_file
+        sf.write(str(mixed_file_path), mixed, sample_rate)
+        print(f"Mixed track written to: {mixed_file_path}")
+        result["mixed_file"] = str(mixed_file_path)
 
     # Save JSON data if requested
     if save_json:
-        json_file = output_file.replace(".wav", "_beat_grid.json")
+        json_filename = output_file.replace(".wav", "_beat_grid.json")
+        json_file_path = output_dir_path / json_filename
         beat_grid_data = {
             "bpm": float(bpm),
             "beats": [float(t) for t in beats],
@@ -245,9 +255,9 @@ def generate_metronome_from_file(
             "audio_duration": float(len(audio) / sample_rate),
         }
 
-        with open(json_file, "w") as f:
+        with open(json_file_path, "w") as f:
             json.dump(beat_grid_data, f, indent=2)
-        print(f"Beat grid data written to: {json_file}")
-        result["json_file"] = json_file
+        print(f"Beat grid data written to: {json_file_path}")
+        result["json_file"] = str(json_file_path)
 
     return result
