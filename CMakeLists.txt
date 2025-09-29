@@ -217,17 +217,17 @@ add_library(essentia_rhythm_core STATIC
   # Rhythm stack
   vendor/essentia/src/algorithms/rhythm/rhythmextractor2013.cpp
   vendor/essentia/src/algorithms/rhythm/beattrackermultifeature.cpp
-vendor/essentia/src/algorithms/rhythm/beattrackerdegara.cpp
-vendor/essentia/src/algorithms/rhythm/onsetdetection.cpp
-vendor/essentia/src/algorithms/rhythm/onsetdetectionglobal.cpp
-vendor/essentia/src/algorithms/rhythm/tempotapdegara.cpp
-vendor/essentia/src/algorithms/rhythm/tempotapmaxagreement.cpp
-vendor/essentia/src/algorithms/standard/framecutter.cpp
-vendor/essentia/src/algorithms/complex/cartesiantopolar.cpp
-vendor/essentia/src/algorithms/standard/scale.cpp
-vendor/essentia/src/essentia/streaming/streamingalgorithmcomposite.cpp
-vendor/essentia/src/algorithms/complex/magnitude.cpp
-vendor/essentia/src/algorithms/spectral/erbbands.cpp
+  vendor/essentia/src/algorithms/rhythm/beattrackerdegara.cpp
+  vendor/essentia/src/algorithms/rhythm/onsetdetection.cpp
+  vendor/essentia/src/algorithms/rhythm/onsetdetectionglobal.cpp
+  vendor/essentia/src/algorithms/rhythm/tempotapdegara.cpp
+  vendor/essentia/src/algorithms/rhythm/tempotapmaxagreement.cpp
+  vendor/essentia/src/algorithms/standard/framecutter.cpp
+  vendor/essentia/src/algorithms/complex/cartesiantopolar.cpp
+  vendor/essentia/src/algorithms/standard/scale.cpp
+  vendor/essentia/src/essentia/streaming/streamingalgorithmcomposite.cpp
+  vendor/essentia/src/algorithms/complex/magnitude.cpp
+  vendor/essentia/src/algorithms/spectral/erbbands.cpp
 
   # Spectral/temporal deps
 vendor/essentia/src/algorithms/standard/windowing.cpp

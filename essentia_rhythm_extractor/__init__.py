@@ -1,5 +1,9 @@
 # Import the compiled extension
-from _rhythmext import rhythm_extractor_2013, rhythm_multifeature, onset_detection  # type: ignore
+from _rhythmext import (  # type: ignore
+    onset_detection,
+    rhythm_extractor_2013,
+    rhythm_multifeature,
+)
 
 """This module provides Python bindings for rhythm feature extraction
 using the Essentia library's BeatTrackerMultiFeature and RhythmExtractor2013 algorithms.
@@ -42,7 +46,7 @@ def run_rhythm_extractor_2013(
 def run_onset_detection(x, sr):
     """
     Onset detection analysis using Essentia's OnsetRate algorithm.
-    
+
     Args:
         x: mono float32 numpy array
         sr: sample rate (must be 44100.0)
@@ -66,10 +70,13 @@ def run_multifeature_from_file(filename, *, min_tempo=40, max_tempo=208):
         dict with keys: bpm, confidence, ticks, bpm_estimates, bpm_intervals
     """
     from _rhythmext import rhythm_multifeature_from_file  # type: ignore
+
     return rhythm_multifeature_from_file(filename, int(min_tempo), int(max_tempo))
 
 
-def run_rhythm_extractor_2013_from_file(filename, *, min_tempo=40, max_tempo=208, method="multifeature"):
+def run_rhythm_extractor_2013_from_file(
+    filename, *, min_tempo=40, max_tempo=208, method="multifeature"
+):
     """
     RhythmExtractor2013 analysis from file using Essentia's MonoLoader.
     Args:
@@ -81,7 +88,10 @@ def run_rhythm_extractor_2013_from_file(filename, *, min_tempo=40, max_tempo=208
         dict: bpm, confidence, ticks, bpm_estimates, bpm_intervals
     """
     from _rhythmext import rhythm_extractor_2013_from_file  # type: ignore
-    return rhythm_extractor_2013_from_file(filename, int(min_tempo), int(max_tempo), method)
+
+    return rhythm_extractor_2013_from_file(
+        filename, int(min_tempo), int(max_tempo), method
+    )
 
 
 def run_onset_detection_from_file(filename):
@@ -95,6 +105,7 @@ def run_onset_detection_from_file(filename):
             - onsets: array of onset times in seconds
     """
     from _rhythmext import onset_detection_from_file  # type: ignore
+
     return onset_detection_from_file(filename)
 
 

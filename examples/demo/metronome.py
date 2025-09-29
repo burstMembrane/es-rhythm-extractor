@@ -35,6 +35,7 @@ def main():
         output_file=args.output,
         create_mixed=args.create_mixed,
         save_json=args.save_json,
+        output_dir=Path(args.output).parent,
     )
     print(result)
 

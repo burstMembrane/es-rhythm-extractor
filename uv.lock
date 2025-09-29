@@ -83,11 +83,12 @@ wheels = [
 
 [[package]]
 name = "essentia-rhythm-extractor"
-version = "0.1.0"
+version = "0.2.1"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
     { name = "pybind11" },
+    { name = "soundfile" },
 ]
 
 [package.optional-dependencies]
@@ -114,6 +115,7 @@ dev = [
 requires-dist = [
     { name = "numpy", specifier = "==1.26.1" },
     { name = "pybind11", specifier = ">=2.12" },
+    { name = "soundfile", specifier = ">=0.13.1" },
     { name = "soundfile", marker = "extra == 'cli'", specifier = ">=0.12" },
     { name = "soxr", marker = "extra == 'cli'", specifier = ">=0.3.7" },
 ]

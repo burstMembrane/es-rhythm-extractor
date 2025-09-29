@@ -10,7 +10,7 @@ def _quantize_onsets_to_beat_grid(onsets, beats) -> List[float]:
     import numpy as np
 
     # Handle case where onsets/beats might be numpy arrays
-    if hasattr(onsets, 'any'):
+    if hasattr(onsets, "any"):
         if not onsets.any() or len(beats) < 2:
             return []
     else:
@@ -20,7 +20,7 @@ def _quantize_onsets_to_beat_grid(onsets, beats) -> List[float]:
     quantized_onsets = []
 
     # Calculate beat interval from first few beats for regular grid
-    beat_intervals = np.diff(beats[:min(4, len(beats))])
+    beat_intervals = np.diff(beats[: min(4, len(beats))])
     avg_beat_interval = np.mean(beat_intervals)
 
     # Create extended beat grid (before first beat and after last beat)
@@ -41,10 +41,14 @@ def _quantize_onsets_to_beat_grid(onsets, beats) -> List[float]:
     # Extend grid forwards
     t = last_beat
     # Handle numpy array check for onsets
-    if hasattr(onsets, 'any'):
-        audio_duration = max(onsets[-1] if onsets.any() else 0, last_beat) + avg_beat_interval
+    if hasattr(onsets, "any"):
+        audio_duration = (
+            max(onsets[-1] if onsets.any() else 0, last_beat) + avg_beat_interval
+        )
     else:
-        audio_duration = max(onsets[-1] if len(onsets) > 0 else 0, last_beat) + avg_beat_interval
+        audio_duration = (
+            max(onsets[-1] if len(onsets) > 0 else 0, last_beat) + avg_beat_interval
+        )
     while t < audio_duration:
         t += avg_beat_interval
         grid_times.append(t)
@@ -67,7 +71,9 @@ def _quantize_onsets_to_beat_grid(onsets, beats) -> List[float]:
     return quantized_onsets
 
 
-def _generate_click_sound(sample_rate: int = 44100, duration: float = 0.05, frequency: int = 1000) -> 'np.ndarray':
+def _generate_click_sound(
+    sample_rate: int = 44100, duration: float = 0.05, frequency: int = 1000
+) -> "np.ndarray":
     """Generate a click/beep sound."""
     import numpy as np
 
@@ -83,7 +89,7 @@ def generate_metronome_from_file(
     output_dir: str,
     output_file: Optional[str] = None,
     create_mixed: bool = True,
-    save_json: bool = True
+    save_json: bool = True,
 ) -> Dict:
     """Generate a metronome track from audio file using rhythm extraction.
 
@@ -132,7 +138,9 @@ def generate_metronome_from_file(
     print(f"Found {len(onset_times)} onsets")
 
     print("Extracting rhythm...")
-    rhythm_result = run_rhythm_extractor_2013_from_file(str(input_file), method="multifeature")
+    rhythm_result = run_rhythm_extractor_2013_from_file(
+        str(input_file), method="multifeature"
+    )
 
     bpm = rhythm_result["bpm"]
     beats = rhythm_result["ticks"]
@@ -155,6 +163,7 @@ def generate_metronome_from_file(
     target_sr = 44100
     if sample_rate != target_sr:
         import soxr
+
         audio = soxr.resample(audio, sample_rate, target_sr)
         sample_rate = target_sr
 
@@ -173,8 +182,12 @@ def generate_metronome_from_file(
     metronome = np.zeros_like(audio)
 
     # Generate click sounds
-    strong_click = _generate_click_sound(sample_rate, duration=0.05, frequency=1000)  # Main beats
-    weak_click = _generate_click_sound(sample_rate, duration=0.03, frequency=800) * 0.6  # Quantized onsets
+    strong_click = _generate_click_sound(
+        sample_rate, duration=0.05, frequency=1000
+    )  # Main beats
+    weak_click = (
+        _generate_click_sound(sample_rate, duration=0.03, frequency=800) * 0.6
+    )  # Quantized onsets
 
     # Place strong clicks at main beat positions
     for beat_time in beats:
@@ -188,7 +201,7 @@ def generate_metronome_from_file(
     for onset_time in quantized_onsets:
         # Check if this onset is too close to a main beat
         # Handle numpy array check for beats
-        if hasattr(beats, 'any'):
+        if hasattr(beats, "any"):
             min_distance = (
                 min(abs(onset_time - beat) for beat in beats)
                 if beats.any()
@@ -224,7 +237,7 @@ def generate_metronome_from_file(
         "quantized_onsets": quantized_onsets,
         "beats_intervals": beats_intervals,
         "bpm_intervals": bpm_intervals,
-        "metronome_file": str(output_file_path)
+        "metronome_file": str(output_file_path),
     }
 
     # Create mixed version if requested
@@ -249,8 +262,12 @@ def generate_metronome_from_file(
             "confidence": float(beats_confidence),
             "onsets": [float(t) for t in onset_times],
             "quantized_onsets": [float(t) for t in quantized_onsets],
-            "beats_intervals": [float(x) for x in beats_intervals] if beats_intervals is not None else None,
-            "bpm_intervals": [float(x) for x in bpm_intervals] if bpm_intervals is not None else None,
+            "beats_intervals": [float(x) for x in beats_intervals]
+            if beats_intervals is not None
+            else None,
+            "bpm_intervals": [float(x) for x in bpm_intervals]
+            if bpm_intervals is not None
+            else None,
             "sample_rate": int(sample_rate),
             "audio_duration": float(len(audio) / sample_rate),
         }
