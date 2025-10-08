@@ -13,3 +13,5 @@ testdata
 
 # Vendor dependencies (downloaded by build scripts)
 vendor/essentia/
+drums.wav
+metronome.wav

@@ -192,6 +192,9 @@ def generate_metronome_from_file(
     # Place strong clicks at main beat positions
     for beat_time in beats:
         sample_idx = int(beat_time * sample_rate)
+        # Skip if beat is before start of audio (negative time)
+        if sample_idx < 0:
+            continue
         end_idx = min(sample_idx + len(strong_click), len(metronome))
         click_len = end_idx - sample_idx
         if click_len > 0:
@@ -215,6 +218,9 @@ def generate_metronome_from_file(
             )
         if min_distance > 0.05:  # More than 50ms away from nearest beat
             sample_idx = int(onset_time * sample_rate)
+            # Skip if onset is before start of audio (negative time)
+            if sample_idx < 0:
+                continue
             end_idx = min(sample_idx + len(weak_click), len(metronome))
             click_len = end_idx - sample_idx
             if click_len > 0:
