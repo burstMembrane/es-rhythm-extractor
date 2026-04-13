@@ -36,13 +36,21 @@ cli = ["soxr>=0.3.7", "soundfile>=0.12"]
 rhythm-extractor = "essentia_rhythm_extractor.cli:main"
 [tool.scikit-build]
 cmake.verbose = true
+# Use ccache if available
+cmake.args = [
+    "-DCMAKE_C_COMPILER_LAUNCHER=ccache",
+    "-DCMAKE_CXX_COMPILER_LAUNCHER=ccache",
+]
 # Run setup script before build
 build-dir = "build"
 # Include only the vendor files that are actually used by CMakeLists.txt
 sdist.include = [
-    "src/**/*",
+    "src/**",
     "CMakeLists.txt",
     "version.h.in",
     "scripts/setup-essentia.sh",
-    # Note: vendor/essentia/* files are now downloaded during build by setup-essentia.sh
+    "vendor/essentia/src/essentia/**",
+    "vendor/essentia/src/algorithms/**",
+    "vendor/essentia/src/3rdparty/**",
+    "vendor/essentia/VERSION",
 ]

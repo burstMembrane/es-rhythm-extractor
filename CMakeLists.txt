@@ -5,6 +5,14 @@ cmake_policy(SET CMP0148 OLD)
 
 project(essentia_rhythm_multifeature LANGUAGES C CXX)
 
+# Use ccache if available
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+  message(STATUS "Found ccache: ${CCACHE_PROGRAM}")
+  set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+  set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+endif()
+
 # Check for system Eigen3 first
 find_package(Eigen3 3.3 QUIET)
 

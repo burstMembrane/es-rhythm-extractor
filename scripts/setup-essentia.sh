@@ -15,35 +15,40 @@ echo "Setting up Essentia library..."
 # Create vendor directory if it doesn't exist
 mkdir -p "$VENDOR_DIR"
 
-# Remove existing essentia directory if it exists
-if [ -d "$ESSENTIA_DIR" ]; then
-    echo "Removing existing essentia directory..."
-    rm -rf "$ESSENTIA_DIR"
-fi
+# Skip cloning if essentia source already exists (e.g., from sdist)
+if [ -d "$ESSENTIA_DIR/src" ]; then
+    echo "Essentia source already present, skipping clone..."
+else
+    # Remove existing essentia directory if it exists but is incomplete
+    if [ -d "$ESSENTIA_DIR" ]; then
+        echo "Removing incomplete essentia directory..."
+        rm -rf "$ESSENTIA_DIR"
+    fi
 
-# Clone essentia repository (shallow clone for faster download)
-echo "Cloning essentia from $ESSENTIA_REPO (branch: $ESSENTIA_BRANCH)..."
-git clone --depth 1 --branch "$ESSENTIA_BRANCH" "$ESSENTIA_REPO" "$ESSENTIA_DIR"
+    # Clone essentia repository (shallow clone for faster download)
+    echo "Cloning essentia from $ESSENTIA_REPO (branch: $ESSENTIA_BRANCH)..."
+    git clone --depth 1 --branch "$ESSENTIA_BRANCH" "$ESSENTIA_REPO" "$ESSENTIA_DIR"
 
-# Remove .git directory to make it a regular directory (not a repo)
-echo "Cleaning up git metadata..."
-rm -rf "$ESSENTIA_DIR/.git"
+    # Remove .git directory to make it a regular directory (not a repo)
+    echo "Cleaning up git metadata..."
+    rm -rf "$ESSENTIA_DIR/.git"
 
-# Remove problematic submodule configurations
-if [ -f "$ESSENTIA_DIR/.gitmodules" ]; then
-    echo "Removing .gitmodules from essentia..."
-    rm "$ESSENTIA_DIR/.gitmodules"
-fi
+    # Remove problematic submodule configurations
+    if [ -f "$ESSENTIA_DIR/.gitmodules" ]; then
+        echo "Removing .gitmodules from essentia..."
+        rm "$ESSENTIA_DIR/.gitmodules"
+    fi
 
-# Remove test directories that would contain large LFS files
-if [ -d "$ESSENTIA_DIR/test/models" ]; then
-    echo "Removing test/models directory (contains large LFS files)..."
-    rm -rf "$ESSENTIA_DIR/test/models"
-fi
+    # Remove test directories that would contain large LFS files
+    if [ -d "$ESSENTIA_DIR/test/models" ]; then
+        echo "Removing test/models directory (contains large LFS files)..."
+        rm -rf "$ESSENTIA_DIR/test/models"
+    fi
 
-if [ -d "$ESSENTIA_DIR/test/audio" ]; then
-    echo "Removing test/audio directory..."
-    rm -rf "$ESSENTIA_DIR/test/audio"
+    if [ -d "$ESSENTIA_DIR/test/audio" ]; then
+        echo "Removing test/audio directory..."
+        rm -rf "$ESSENTIA_DIR/test/audio"
+    fi
 fi
 
 # Check for system Eigen first, build only if needed
