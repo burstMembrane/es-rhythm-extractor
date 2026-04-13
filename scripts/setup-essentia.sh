@@ -8,7 +8,8 @@ set -e  # Exit on any error
 VENDOR_DIR="vendor"
 ESSENTIA_DIR="$VENDOR_DIR/essentia"
 ESSENTIA_REPO="https://github.com/MTG/essentia.git"
-ESSENTIA_BRANCH="v2.1_beta5"  # Pinned for FFmpeg 4.x compatibility
+# Pinned commit: last commit before FFmpeg 5.x API changes (has swresample + old channel_layout API)
+ESSENTIA_COMMIT="36ec3d92"
 
 echo "Setting up Essentia library..."
 
@@ -25,9 +26,12 @@ else
         rm -rf "$ESSENTIA_DIR"
     fi
 
-    # Clone essentia repository (shallow clone for faster download)
-    echo "Cloning essentia from $ESSENTIA_REPO (branch: $ESSENTIA_BRANCH)..."
-    git clone --depth 1 --branch "$ESSENTIA_BRANCH" "$ESSENTIA_REPO" "$ESSENTIA_DIR"
+    # Clone essentia repository and checkout pinned commit
+    echo "Cloning essentia from $ESSENTIA_REPO (commit: $ESSENTIA_COMMIT)..."
+    git clone --filter=blob:none "$ESSENTIA_REPO" "$ESSENTIA_DIR"
+    cd "$ESSENTIA_DIR"
+    git checkout "$ESSENTIA_COMMIT"
+    cd - > /dev/null
 
     # Remove .git directory to make it a regular directory (not a repo)
     echo "Cleaning up git metadata..."
