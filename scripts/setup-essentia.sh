@@ -8,7 +8,7 @@ set -e  # Exit on any error
 VENDOR_DIR="vendor"
 ESSENTIA_DIR="$VENDOR_DIR/essentia"
 ESSENTIA_REPO="https://github.com/MTG/essentia.git"
-ESSENTIA_BRANCH="master"
+ESSENTIA_BRANCH="v2.1_beta5"  # Pinned for FFmpeg 4.x compatibility
 
 echo "Setting up Essentia library..."
 
